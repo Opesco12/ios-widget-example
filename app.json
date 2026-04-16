@@ -6,14 +6,15 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mynotes",
-    "entitlements": {
-      "com.apple.security.application-groups": ["group.com.pathwaywealth.dev"]
-    },
+
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.pathwaywealth.dev",
       "appleTeamId": "7LADC5K7A7",
+      "entitlements": {
+        "com.apple.security.application-groups": ["group.com.pathwaywealth.dev"]
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
