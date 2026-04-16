@@ -1,98 +1,134 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import AddNoteBottomSheet from "@/component/AddNoteSheet";
+import FAB from "@/component/FAB";
+import NoteCard from "@/component/NoteCard";
+import { ExtensionStorage } from "@bacons/apple-targets";
+import { useLinkingURL } from "expo-linking";
+import { useCallback, useEffect, useState } from "react";
+import { AppState, FlatList, StyleSheet, Text, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+type Note = {
+  id: string;
+  title: string;
+  text: string;
+  createdAt: number;
+};
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
+const storage = new ExtensionStorage("group.com.pathwaywealth.dev");
+const STORAGE_KEY = "notes";
+
+const persistNotes = (notes: Note[]) => {
+  try {
+    storage.set(STORAGE_KEY, JSON.stringify(notes));
+    ExtensionStorage.reloadWidget();
+  } catch (e) {
+    console.warn("[NotesStore] persist failed:", e);
   }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
+};
+
+async function loadPersistedNotes(): Promise<Note[]> {
+  try {
+    const raw = storage.get(STORAGE_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch (e) {
+    console.warn("[NotesStore] load failed:", e);
+    return [];
   }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
 }
 
-export default function HomeScreen() {
+const Index = () => {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  const url = useLinkingURL();
+
+  useEffect(() => {
+    if (url?.includes("action=add-note")) {
+      setBottomSheetOpen(true);
+    }
+  }, [url]);
+
+  useEffect(() => {
+    loadPersistedNotes().then((saved) => {
+      setNotes(saved);
+      setReady(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+    persistNotes(notes);
+  }, [notes, ready]);
+
+  const addNote = useCallback((title: string, text: string) => {
+    setNotes((prev) => [
+      {
+        id: Date.now().toString(),
+        title,
+        text,
+        createdAt: Date.now(),
+      },
+      ...prev,
+    ]);
+  }, []);
+
+  const deleteNote = useCallback((id: string) => {
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+  }, []);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "background") {
+        ExtensionStorage.reloadWidget();
+      }
+    });
+
+    return () => sub.remove();
+  }, []);
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={styles.root}>
+        <Text style={styles.headerTitle}>Notes</Text>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+        <FlatList
+          data={notes}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          renderItem={({ item }) => (
+            <NoteCard
+              note={item}
+              onDelete={deleteNote}
+            />
+          )}
+        />
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+        <FAB onPress={() => setBottomSheetOpen(true)} />
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+        <AddNoteBottomSheet
+          isOpen={bottomSheetOpen}
+          onClose={() => setBottomSheetOpen(false)}
+          onSave={addNote}
+        />
+      </View>
+    </GestureHandlerRootView>
   );
-}
+};
+
+const BG = "#0F0F0F";
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+  root: { flex: 1, backgroundColor: BG, paddingTop: 60 },
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    paddingHorizontal: 20,
+    marginBottom: 10,
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
+  list: { paddingHorizontal: 16, paddingBottom: 100, gap: 10 },
 });
+
+export default Index;

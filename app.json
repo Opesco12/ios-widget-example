@@ -1,15 +1,22 @@
 {
   "expo": {
-    "name": "test-app",
+    "name": "MyNotes",
     "slug": "test-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "testapp",
+    "scheme": "mynotes",
+    "entitlements": {
+      "com.apple.security.application-groups": ["group.com.pathwaywealth.dev"]
+    },
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.utlam.test"
+      "bundleIdentifier": "com.pathwaywealth.dev",
+      "appleTeamId": "7LADC5K7A7",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +26,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.utlam.test"
+      "package": "com.pathwaywealth.dev"
     },
     "web": {
       "output": "static",
@@ -36,11 +43,19 @@
             "imageWidth": 76
           }
         }
-      ]
+      ],
+      "@bacons/apple-targets",
+      "expo-build-properties"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4107585a-0366-4693-9fbd-ba1339805d4c"
+      }
     }
   }
 }
