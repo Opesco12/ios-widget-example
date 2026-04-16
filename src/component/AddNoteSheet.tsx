@@ -1,8 +1,9 @@
 import BottomSheet, {
+  BottomSheetBackdrop,
   BottomSheetTextInput,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Keyboard, StyleSheet, Text, TouchableOpacity } from "react-native";
 
 const AddNoteBottomSheet = ({
@@ -24,20 +25,37 @@ const AddNoteBottomSheet = ({
     setTitle("");
     setContent("");
     Keyboard.dismiss();
-    bottomSheetRef.current?.close();
+
     onClose();
   };
+
+  useEffect(() => {
+    console.log("sheet state: ", isOpen);
+    if (isOpen) {
+      bottomSheetRef.current?.snapToIndex(0);
+    } else {
+      bottomSheetRef.current?.close();
+    }
+  }, [isOpen]);
 
   return (
     <BottomSheet
       ref={bottomSheetRef}
       index={isOpen ? 0 : -1}
-      snapPoints={["50%"]}
+      snapPoints={["60%"]}
       enablePanDownToClose
       onClose={onClose}
       keyboardBehavior="interactive"
       backgroundStyle={styles.bottomSheetBackground}
       handleIndicatorStyle={styles.bottomSheetHandle}
+      backdropComponent={(props) => (
+        <BottomSheetBackdrop
+          {...props}
+          disappearsOnIndex={-1}
+          appearsOnIndex={0}
+          pressBehavior="close"
+        />
+      )}
     >
       <BottomSheetView style={styles.bottomSheetContent}>
         <Text style={styles.sheetTitle}>New Note</Text>

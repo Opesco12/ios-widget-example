@@ -36,6 +36,16 @@ const NoteCard = ({
         <ContextMenu>
           <ContextMenu.Items>
             <Button
+              label="Select"
+              systemImage="checkmark"
+              onPress={() => {}}
+            />
+            <Button
+              label="Edit"
+              systemImage="pencil"
+              onPress={() => {}}
+            />
+            <Button
               label="Delete"
               role="destructive"
               systemImage="trash"

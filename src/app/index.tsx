@@ -2,7 +2,7 @@ import AddNoteBottomSheet from "@/component/AddNoteSheet";
 import FAB from "@/component/FAB";
 import NoteCard from "@/component/NoteCard";
 import { ExtensionStorage } from "@bacons/apple-targets";
-import { useLinkingURL } from "expo-linking";
+import * as Linking from "expo-linking";
 import { useCallback, useEffect, useState } from "react";
 import { AppState, FlatList, StyleSheet, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -42,13 +42,15 @@ const Index = () => {
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const [ready, setReady] = useState(false);
 
-  const url = useLinkingURL();
-
   useEffect(() => {
-    if (url?.includes("action=add-note")) {
-      setBottomSheetOpen(true);
-    }
-  }, [url]);
+    const sub = Linking.addEventListener("url", ({ url }) => {
+      if (url.includes("add-note")) {
+        setBottomSheetOpen(true);
+      }
+    });
+
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     loadPersistedNotes().then((saved) => {
