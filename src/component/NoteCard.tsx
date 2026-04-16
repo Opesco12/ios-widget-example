@@ -37,12 +37,7 @@ const NoteCard = ({
           <ContextMenu.Items>
             <Button
               label="Select"
-              systemImage="checkmark"
-              onPress={() => {}}
-            />
-            <Button
-              label="Edit"
-              systemImage="pencil"
+              systemImage="checkmark.circle"
               onPress={() => {}}
             />
             <Button

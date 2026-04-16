@@ -30,7 +30,6 @@ const AddNoteBottomSheet = ({
   };
 
   useEffect(() => {
-    console.log("sheet state: ", isOpen);
     if (isOpen) {
       bottomSheetRef.current?.snapToIndex(0);
     } else {
