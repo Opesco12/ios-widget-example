@@ -7,7 +7,9 @@ const storage = new ExtensionStorage("group.com.pathwaywealth.dev");
 export default function NoteDetails() {
   const { id } = useLocalSearchParams();
 
-  const notes = JSON.parse(storage.get("notes") || "[]");
+  const raw = storage.get("notes");
+  const notes =
+    typeof raw === "string" && raw.trim() ? JSON.parse(raw) : [];
   const note = notes.find((n: any) => n.id === id);
 
   if (!note) {

@@ -29,8 +29,8 @@ const persistNotes = (notes: Note[]) => {
 async function loadPersistedNotes(): Promise<Note[]> {
   try {
     const raw = storage.get(STORAGE_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw);
+    if (typeof raw !== "string" || !raw.trim()) return [];
+    return JSON.parse(raw) as Note[];
   } catch (e) {
     console.warn("[NotesStore] load failed:", e);
     return [];

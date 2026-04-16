@@ -24,7 +24,8 @@ struct NotesStore {
     static func load() -> [Note] {
         guard
             let defaults = UserDefaults(suiteName: appGroup),
-            let data = defaults.data(forKey: key), 
+            let json = defaults.string(forKey: key),
+            let data = json.data(using: .utf8),
             let notes = try? JSONDecoder().decode([Note].self, from: data)
         else { return [] }
 
