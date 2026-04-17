@@ -41,7 +41,7 @@ const AddNoteBottomSheet = ({
     <BottomSheet
       ref={bottomSheetRef}
       index={isOpen ? 0 : -1}
-      snapPoints={["60%"]}
+      snapPoints={["50%"]}
       enablePanDownToClose
       onClose={onClose}
       keyboardBehavior="interactive"

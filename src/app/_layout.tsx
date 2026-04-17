@@ -8,7 +8,7 @@ export default function RootLayout() {
 const AppLayout = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Stack screenOptions={{ headerShown: false }} />;
+      <Stack screenOptions={{ headerShown: false }} />
     </GestureHandlerRootView>
   );
 };
