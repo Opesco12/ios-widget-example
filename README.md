@@ -1,56 +1,218 @@
-# Welcome to your Expo app 👋
+# 📝 Notes App with iOS Widget (Expo + React Native)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A minimal, high-performance notes app built with **React Native (Expo)** and extended with a native **iOS Home Screen Widget** using **SwiftUI + WidgetKit**.
 
-## Get started
+This project demonstrates how to **share data between a React Native app and an iOS widget**, handle **deep linking**, and trigger **real-time widget updates**.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## 🚀 Features
 
-2. Start the app
+- ✍️ Create and delete notes
+- ⚡ Smooth animations using Reanimated
+- 📱 Native-feeling UI with bottom sheet input
+- 🧠 Persistent storage using App Group (shared with widget)
+- 🧩 iOS Widget showing recent notes
+- ➕ Widget button opens app and triggers "Add Note"
+- 🔄 Widget refreshes automatically + manually
+- 🎯 Deep linking integration
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## 🏗️ Tech Stack
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### App
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- React Native (Expo)
+- TypeScript
+- Reanimated
+- Gorhom Bottom Sheet
 
-## Get a fresh project
+### Native iOS
 
-When you're ready, run:
+- SwiftUI
+- WidgetKit
+- App Groups (shared storage)
 
-```bash
-npm run reset-project
+### Bridging
+
+- `@bacons/apple-targets` (ExtensionStorage)
+
+---
+
+## 🧠 How It Works
+
+### 1. Shared Storage (App ↔ Widget)
+
+```ts
+const storage = new ExtensionStorage("group.<your-app-identifier>");
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Notes are stored as JSON:
 
-### Other setup steps
+```ts
+storage.set("notes", JSON.stringify(notes));
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+On the widget side (Swift):
 
-## Learn more
+```swift
+let defaults = UserDefaults(suiteName: "group.<your-app-identifier>")
+let json = defaults.string(forKey: "notes")
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+👉 This allows **both the app and widget to read the same data**.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+---
 
-## Join the community
+### 2. Widget Updates
 
-Join our community of developers creating universal apps.
+Widget updates happen in two ways:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+#### Automatic
+
+- Widget refreshes every 15 minutes via timeline
+
+#### Manual (instant update)
+
+Triggered from React Native:
+
+```ts
+ExtensionStorage.reloadWidget();
+```
+
+Also triggered when app goes to background:
+
+```ts
+AppState.addEventListener("change", (state) => {
+  if (state === "background") {
+    ExtensionStorage.reloadWidget();
+  }
+});
+```
+
+---
+
+### 3. Deep Linking (Widget → App)
+
+The widget "+" button uses:
+
+```swift
+Link(destination: URL(string: "<your-scheme>://?action=add-note")!)
+```
+
+In React Native:
+
+```ts
+Linking.addEventListener("url", ({ url }) => {
+  if (url.includes("add-note")) {
+    setBottomSheetOpen(true);
+  }
+});
+```
+
+👉 Result:
+
+- Tapping "+" opens the app
+- Bottom sheet opens automatically
+
+---
+
+### 4. Bottom Sheet Behavior
+
+Controlled via state:
+
+```ts
+const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
+```
+
+Triggered by:
+
+- FAB button
+- Widget deep link
+
+---
+
+### 5. iOS Widget
+
+Built with:
+
+- `TimelineProvider`
+- `SwiftUI Views`
+- `UserDefaults (App Group)`
+
+Displays:
+
+- Latest 3 notes
+- Title + preview text
+- Empty state when no notes exist
+
+---
+
+## ⚙️ Setup
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+---
+
+### 2. Configure App Group
+
+In Apple Developer, create:
+
+```
+group.<your-app-identifier>
+```
+
+Ensure it's added to:
+
+- Main app target
+- Widget extension target
+
+---
+
+### 3. Configure plugin
+
+```js
+// app.plugin.js
+module.exports = (config) => ({
+  type: "widget",
+  bundleId: "<your.widget.bundle.id>",
+  entitlements: {
+    "com.apple.security.application-groups": ["group.<your-app-identifier>"],
+  },
+});
+```
+
+---
+
+### 4. Configure deep linking
+
+In `app.json`:
+
+```json
+{
+  "expo": {
+    "scheme": "<your-scheme>"
+  }
+}
+```
+
+---
+
+### 5. Build the app
+
+Because widgets require native code:
+
+```bash
+npx expo prebuild
+```
+
+or (recommended):
+
+```bash
+eas build -p ios
+```
